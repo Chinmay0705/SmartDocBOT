@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Smart Document Parser & Q&A Bot</title>
-  <style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smart Document Parser & Q&A Bot</title>
+<style>
+  *,
+  *:before,
+  *:after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
       background-color: #f4f6f8;
@@ -12,43 +19,84 @@
       margin: 0;
     }
     header {
+      position: sticky;
+      top: 0;
       background-color: #281c53;
-      color: #fff;
-      padding: 16px;
-      font-size: 20px;
+      color: #ffffff;
+      height: 75px;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
       font-weight: 500;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      padding: 0 20px;
+      justify-content: space-between;
+      gap:10px;
+      flex-wrap: wrap;
     }
-    .container {
-      max-width: 650px;
+    header .left-header {
+      display: flex;
+      align-items: center;
+      gap:15px;
+    }
+    header .left-header a {
+      background-image: url(data:image/svg+xml;base64,PHN2ZyBpZD0iR3JvdXBfNDk0OCIgZGF0YS1uYW1lPSJHcm91cCA0OTQ4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTQ1IiBoZWlnaHQ9IjMzIiB2aWV3Qm94PSIwIDAgMTQ1IDMzIj4KICA8ZGVmcz4KICAgIDxjbGlwUGF0aCBpZD0iY2xpcC1wYXRoIj4KICAgICAgPHJlY3QgaWQ9IlJlY3RhbmdsZV8xNzA5IiBkYXRhLW5hbWU9IlJlY3RhbmdsZSAxNzA5IiB3aWR0aD0iMTQ1IiBoZWlnaHQ9IjMzIiBmaWxsPSJub25lIi8+CiAgICA8L2NsaXBQYXRoPgogIDwvZGVmcz4KICA8ZyBpZD0iR3JvdXBfNDk0OC0yIiBkYXRhLW5hbWU9Ikdyb3VwIDQ5NDgiIGNsaXAtcGF0aD0idXJsKCNjbGlwLXBhdGgpIj4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MDYiIGRhdGEtbmFtZT0iUGF0aCAyNTA2IiBkPSJNMTM0LjMsNTAuODU1YzAtNS4yNCwyLjkzNy03Ljk0LDcuMzEzLTcuOTRzNy4zMTMsMi42NjcsNy4zMTMsNy45NHY4LjE2MmgtMi40NThWNTAuODU1YzAtMy42Mi0xLjkxOC01LjUyNi00Ljg1NS01LjUyNnMtNC44NTUsMS45MDYtNC44NTUsNS41MjZ2OC4xNjJIMTM0LjNaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtODUuNjE0IC0yNi40MykiIGZpbGw9IiMxZTBhM2MiLz4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MDciIGRhdGEtbmFtZT0iUGF0aCAyNTA3IiBkPSJNMTgzLjE3NSw1MS4xNzJjMC00Ljc2NCwzLjMtOC4yNTcsNy45NzItOC4yNTdzNy45MTIsMy40OTMsNy45MTIsOC4yNTd2LjkyMUgxODUuNzUyYTUuMjA3LDUuMjA3LDAsMCwwLDUuMzk1LDQuOTIzLDQuOTU2LDQuOTU2LDAsMCwwLDQuNTg2LTIuMzgyaDIuN2E3LjUyNCw3LjUyNCwwLDAsMS03LjI4Myw0LjhjLTQuNjc2LDAtNy45NzItMy40OTQtNy45NzItOC4yNTdtMTMuMzA3LTEuNGE1LjQyNCw1LjQyNCwwLDAsMC0xMC42NjksMFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xMTYuNzc0IC0yNi40MykiIGZpbGw9IiMxZTBhM2MiLz4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MDgiIGRhdGEtbmFtZT0iUGF0aCAyNTA4IiBkPSJNMjM3LjMwNyw1MC44MzVsLTUuODE0LTcuOTIxaDMuMDU3bDQuNTg2LDYuNDg3LDQuNjE1LTYuNDg3aDIuOTM3bC01Ljg0NSw3LjkyMSw2LjA4NCw4LjE4MkgyNDMuOWwtNC44NTUtNi43OC00LjgyNiw2Ljc4aC0yLjk2N1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xNDcuNDI0IC0yNi40MykiIGZpbGw9IiMxZTBhM2MiLz4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MDkiIGRhdGEtbmFtZT0iUGF0aCAyNTA5IiBkPSJNMjc4LjksNTEuM2MwLTQuOTIyLDMuMy04LjM4NCw4LTguMzg0LDQuNjQ1LDAsNy44ODMsMy4zNjYsNy44ODMsOC4zODR2Ny43MThIMjkyLjU0VjU1LjM2NGE2LjE5LDYuMTksMCwwLDEtNi4wNTQsNC4wNjVjLTMuOTg2LDAtNy41ODMtMy4wNDktNy41ODMtOC4xMzFtMTMuNDU3LS4xMjdjMC0zLjQtMi4yMTctNS44NDQtNS40ODUtNS44NDRzLTUuNDg0LDIuNDQ1LTUuNDg0LDUuODQ0YzAsMy4zNjcsMi4yMTgsNS44NDMsNS40ODQsNS44NDNzNS40ODUtMi40NzcsNS40ODUtNS44NDMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xNzcuODAxIC0yNi40MykiIGZpbGw9IiMxZTBhM2MiLz4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MTAiIGRhdGEtbmFtZT0iUGF0aCAyNTEwIiBkPSJNMzQwLjAzMSw0NS40YTUuMTIyLDUuMTIyLDAsMCwwLS44ODgtLjA3NGMtMi4zMzgsMC0zLjg2NiwxLjMtMy44NjYsNC4zODN2OS4zMDVoLTIuNDU3VjQ5LjcxMmMwLTQuNTc0LDIuNTc4LTYuOCw2LjMyNC02LjhhOC42ODcsOC42ODcsMCwwLDEsLjg4OC4wNDVaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjEyLjE3MiAtMjYuNDMpIiBmaWxsPSIjMWUwYTNjIi8+CiAgICA8cGF0aCBpZD0iUGF0aF8yNTExIiBkYXRhLW5hbWU9IlBhdGggMjUxMSIgZD0iTTM1Ni45MjUsNTEuMTcyYzAtNC43NjQsMy4zLTguMjU3LDcuOTcyLTguMjU3YTcuNTY5LDcuNTY5LDAsMCwxLDcuNjQzLDUuOTcxaC0yLjQ4N2E1LjI3Miw1LjI3MiwwLDAsMC01LjE1NS0zLjU1N2MtMy4yNjYsMC01LjQ4NCwyLjQ0NS01LjQ4NCw1Ljg0NCwwLDMuMzY3LDIuMjE4LDUuODQzLDUuNDg0LDUuODQzYTUuMjcyLDUuMjcyLDAsMCwwLDUuMTU1LTMuNTU3aDIuNDg3QTcuNTY5LDcuNTY5LDAsMCwxLDM2NC45LDU5LjQzYy00LjY3NSwwLTcuOTcyLTMuNDk0LTcuOTcyLTguMjU3IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjI3LjU0IC0yNi40MykiIGZpbGw9IiMxZTBhM2MiLz4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MTIiIGRhdGEtbmFtZT0iUGF0aCAyNTEyIiBkPSJNODAuMDQxLDAsNjguODMxLDMyLjYsNTguNzQ2LDE2LjMsNjMuMzg4LDIuOEE0Ny4wNjMsNDcuMDYzLDAsMCwxLDgwLjA0MSwwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMzcuNDUxIDApIiBmaWxsPSIjMjhmZmM4Ii8+CiAgICA8cGF0aCBpZD0iUGF0aF8yNTEzIiBkYXRhLW5hbWU9IlBhdGggMjUxMyIgZD0iTTE2LjI1OCwyMS4yMiwyMS4zLDI5LjM2NWwtNS42LDE2LjNIMGMzLjQ0NS0xMC4wMTUsOC42MjItMTguNiwxNi4yNTgtMjQuNDQ4IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwIC0xMy4wNjkpIiBmaWxsPSIjODIzY2ZmIi8+CiAgICA8cGF0aCBpZD0iUGF0aF8yNTE0IiBkYXRhLW5hbWU9IlBhdGggMjUxNCIgZD0iTTEzNC4yOTUsMGgxMC4zNzFWMy4zNDRoLTIuOTc1djguMDM4SDEzNy4zN1YzLjM0NGgtMy4wNzVaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtODUuNjEzKSIgZmlsbD0iIzFlMGEzYyIgZmlsbC1ydWxlPSJldmVub2RkIi8+CiAgICA8cGF0aCBpZD0iUGF0aF8yNTE1IiBkYXRhLW5hbWU9IlBhdGggMjUxNSIgZD0iTTE2Ni4yNTcsNC42bC0yLjE4Myw2Ljc4M2gtNC4xNTFMMTYzLjk5NCwwSDE2OC41bDQuMTY4LDExLjM4MmgtNC4yWiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEwMS45NTEgMCkiIGZpbGw9IiMxZTBhM2MiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPgogICAgPHBhdGggaWQ9IlBhdGhfMjUxNiIgZGF0YS1uYW1lPSJQYXRoIDI1MTYiIGQ9Ik0xOTIuMzUzLDBoMTAuMzcxVjMuMzQ0SDE5OS43NXY4LjAzOGgtNC4zMjJWMy4zNDRoLTMuMDc0WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEyMi42MjUpIiBmaWxsPSIjMWUwYTNjIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4KICAgIDxwYXRoIGlkPSJQYXRoXzI1MTciIGRhdGEtbmFtZT0iUGF0aCAyNTE3IiBkPSJNMjI0LjMxNSw0LjZsLTIuMTgzLDYuNzgzaC00LjE1MUwyMjIuMDUyLDBoNC41MDZsNC4xNjgsMTEuMzgyaC00LjJaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTM4Ljk2MyAwKSIgZmlsbD0iIzFlMGEzYyIgZmlsbC1ydWxlPSJldmVub2RkIi8+CiAgPC9nPgo8L3N2Zz4K);
+      width: 45px;
+      height: 33px;
+      flex: none;
+    }
+    .hackathon-container {
+      max-width: 580px;
       margin: 30px auto;
       background: #fff;
       padding: 30px;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    label, h3 {
-      font-weight: bold;
-      margin-top: 15px;
+    .hackathon-container label{
+      margin:0 0 10px;
+      display: block;
     }
-    input, button, textarea {
+    .hackathon-container label,
+    .hackathon-container h3 {
+      font-weight: bold;
+    }
+    .hackathon-container input, .hackathon-container button, .hackathon-container textarea {
       width: 100%;
       padding: 12px;
-      margin-top: 10px;
+      margin-top: 0;
       font-size: 14px;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    button {
+    .hackathon-container input[type="file"] {
+      cursor: pointer;
+    }
+    .hackathon-container button {
       background: #823cff;
       color: #fff;
       font-weight: bold;
       border: none;
       margin-top: 20px;
+      cursor: pointer;
+      padding: 10px 15px;
+      border-radius: 20px;
     }
-    button:hover {
+    .hackathon-container .ask-question-btn {
+      border:1px solid #823cff;
+      color: #823cff;
+      background-color: #ffffff;
+    }
+    .hackathon-container .ask-question-btn:hover {
+      border:1px solid #823cff;
+      color: #ffffff;
+      background-color: #823cff;
+    }
+    .hackathon-container button:hover {
       background: #6a2edb;
     }
-    pre {
+    .hackathon-container pre {
       background: #f3f3f3;
       padding: 15px;
       border-radius: 5px;
@@ -56,41 +104,48 @@
       word-wrap: break-word;
       margin-top: 10px;
     }
-  </style>
+</style>
 </head>
 <body>
-  <header>📄 Smart Document Parser & Validator + Q&A Bot</header>
-  <div class="container">
-    <form id="uploadForm">
-      <label for="fileInput">Upload PDF Document:</label>
-      <input type="file" id="fileInput" name="file" required />
-      <button type="submit">🔍 Upload & Parse</button>
-    </form>
 
-    <h3>📋 Parsed & Validated Data:</h3>
-    <pre id="parsedOutput">Waiting for upload...</pre>
-
-    <h3>🤖 Ask a Question About the Document:</h3>
-    <input type="text" id="questionInput" placeholder="Type a question like: What is the GSTIN?" />
-    <button type="button" onclick="askQuestion()">Ask Question</button>
-
-    <h3>💬 Bot Response:</h3>
-    <pre id="answerOutput">Ask something after uploading...</pre>
+<header>
+  <div class="left-header">
+    <a href="javascript:void(0);"></a>
+    Smart Document Parser & Validator
   </div>
+  <div class="right-header">Logic Legends</div>
+</header>
+<div class="hackathon-container">
+  <form id="uploadForm">
+    <label for="fileInput">Upload PDF Document:</label>
+    <input type="file" id="fileInput" name="file" required />
+    <button type="submit">🔍 Upload & Parse</button>
+  </form>
+
+  <h3>📋 Parsed & Validated Data:</h3>
+  <pre id="parsedOutput">Waiting for upload...</pre>
+
+  <h3>🤖 Ask a Question About the Document:</h3>
+  <input type="text" id="questionInput" placeholder="Type a question like: What is the GSTIN?" />
+  <button type="button" onclick="askQuestion()" class="ask-question-btn">Ask Question</button>
+
+  <h3>💬 Bot Response:</h3>
+  <pre id="answerOutput">Ask something after uploading...</pre>
+</div>
 
 <script>
   let rawParsedText = "";
   let structuredJson = "";
-
+ 
   document.getElementById("uploadForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const file = document.getElementById("fileInput").files[0];
     const formData = new FormData();
     formData.append("file", file);
-
+ 
     const parsedOutput = document.getElementById("parsedOutput");
     parsedOutput.textContent = "⏳ Uploading and parsing document...";
-
+ 
     try {
       const response = await fetch("https://hook.us2.make.com/bbl2wn896ii8irgr3pkx3fcdmth69ovr", {
         method: "POST",
@@ -104,16 +159,16 @@
       parsedOutput.textContent = "❌ Error: " + err.message;
     }
   });
-
+ 
   async function askQuestion() {
     const question = document.getElementById("questionInput").value;
     const answerOutput = document.getElementById("answerOutput");
-
+ 
     if (!structuredJson || !question.trim()) {
       answerOutput.textContent = "❗ Please upload a document and enter a valid question.";
       return;
     }
-
+ 
     answerOutput.textContent = "🤖 Thinking...";
     try {
       const response = await fetch("https://hook.us2.make.com/1v3j84y63aiqzb87uk5h84hkx11iufrj", {
